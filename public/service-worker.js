@@ -33,31 +33,22 @@ self.addEventListener("activate", (event) => {
 
 //  * ----- Fetch Listener ----- * \\
 self.addEventListener("fetch", (event) => {
-  // console.log("Service Worker Heard A Fetch");
   let status= navigator.onLine;
-  console.log("Browser Online: " + status);
-  
-//   event.respondWIth(
-//       caches.match(event.request).then((cacheRes) => {return cacheRes || fetch(event.request);})
-//   )
-// });
+  if (event.request.url.startsWith(self.location.origin) && !status) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-
-if (event.request.url.startsWith(self.location.origin) && !status) {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return caches.open(RUNTIME).then((cache) => {
-        return fetch(event.request).then((response) => {
-          return cache.put(event.request, response.clone()).then(() => {
-            return response;
+        return caches.open(RUNTIME).then((cache) => {
+          return fetch(event.request).then((response) => {
+            return cache.put(event.request, response.clone()).then(() => {
+              return response;
+            });
           });
         });
-      });
-    })
-  );
-}
+      })
+    );
+  }
 })
